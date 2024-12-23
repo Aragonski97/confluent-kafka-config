@@ -1,12 +1,16 @@
-This soon-to-be library came as a consequence of much boilerplate code that comes with
-raw confluent-kafka library for python. I often find myself working on the same code 
-over and over again. 
+# IN DEVELOPMENT, NOT YET READY
 
-With this library, the entire communication with Kafka, including serialization for Producers
-and deserialization for Consumers is reduced to a yaml config which is relatively easy to 
-write and customize.
+# Confluent Kafka Config
 
-The sample format can be seen in $FENRIR_ROOT_DIR/confluent-kafka-yaml/app/config.yml.
-This README will cover this topic in more detail within a few weeks.
+A thin wrapper around the [confluent-kafka-python](https://github.com/confluentinc/confluent-kafka-python) library. This wrapper allows for dynamic instantiation of Consumer, Producer, and Admin clients based on configurations provided in a config file in YAML or JSON formats.
 
-~Lazar
+## Installation
+
+To install this package, run:
+
+```bash
+pip install confluent_kafka_config
+```
+
+
+
