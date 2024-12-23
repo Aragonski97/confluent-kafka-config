@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+confluent-kafka-config = "confluent-kafka-config.main:entry"
+
+[project]
+name = "confluent-kafka-config"
+version = "1.0.0"
+description = "Load all your confluent-kafka clients from config file."
+readme = "README.md"
+authors = [{ name = "Lazar Jovanovic" }]
+license = { text = "Apache-2.0" }
+requires-python = ">=3.12"
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Development Status :: 3 - Alpha",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: Pydantic :: 2",
+    "Intended Audience :: Developers",
+    "Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+    "Topic :: System :: Software Distribution"
+]
+
+dependencies = [
+    'fastavro >= 1.10.0',
+    'pydantic >= 2.10.4',
+    'pydantic-settings >= 2.7.0',
+    'pyyaml >= 6.0.2',
+    'confluent-kafka[avro] >= 2.6.1'
+]
+
+
+[project.urls]
+Homepage = "https://github.com/Aragonski97/confluent-kafka-config"
+Changelog = "https://github.com/Aragonski97/confluent-kafka-yaml/releases"
+Issues = "https://github.com/Aragonski97/confluent-kafka-yaml/issues"
