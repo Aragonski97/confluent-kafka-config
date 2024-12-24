@@ -20,7 +20,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Framework :: Pydantic :: 2",
     "Intended Audience :: Developers",
-    "Software Development :: Libraries :: Python Modules",
     "Topic :: Utilities",
     "Topic :: System :: Software Distribution"
 ]
