@@ -18,8 +18,8 @@ from confluent_kafka import Consumer, TopicPartition, Message
 from confluent_kafka.serialization import SerializationContext, MessageField, StringDeserializer
 from confluent_kafka.schema_registry.avro import AvroDeserializer
 from confluent_kafka.schema_registry import SchemaRegistryClient
-from src.topic_context import TopicContext
-from src.registry_context import RegistryContext
+from confluent_kafka_config.topic_context import TopicContext
+from confluent_kafka_config.registry_context import RegistryContext
 
 
 class ConsumerContext:

@@ -16,9 +16,9 @@
 from pathlib import Path
 from confluent_kafka.admin import AdminClient
 from confluent_kafka.schema_registry import SchemaRegistryClient
-from src.consumer_context import ConsumerContext
-from src.producer_context import ProducerContext
-from src.validation import KafkaConfig
+from confluent_kafka_config.consumer_context import ConsumerContext
+from confluent_kafka_config.producer_context import ProducerContext
+from confluent_kafka_config.validation import KafkaConfig
 
 
 class ClientPool:

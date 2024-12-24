@@ -3,10 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-confluent-kafka-config = "confluent_kafka_config.src.cfc:entry"
-
-[tool.setuptools]
-include-package-data = true
+confluent-kafka-config = "confluent_kafka_config.src.confluent_kafka_config.cfc:entry"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -16,7 +13,7 @@ assets = ["*.json", "*.yaml"]
 
 [project]
 name = "confluent-kafka-config"
-version = "1.0.2"
+version = "1.0.9"
 description = "Load all your confluent-kafka clients from config file."
 readme = "README.md"
 authors = [{ name = "Lazar Jovanovic" }]

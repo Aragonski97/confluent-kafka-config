@@ -15,7 +15,7 @@
 from confluent_kafka import TopicPartition
 from confluent_kafka.admin import AdminClient
 from structlog import get_logger
-from src.registry_context import RegistryContext
+from confluent_kafka_config.registry_context import RegistryContext
 
 
 class TopicContext:
