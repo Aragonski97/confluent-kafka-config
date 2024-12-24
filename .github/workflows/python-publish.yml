@@ -39,13 +39,9 @@ jobs:
           name: release-dists
           path: dist/
 
-  pypi-publish:
+  testpypi-publish:
     runs-on: ubuntu-24.04
-    needs:
-      - release-build
-    permissions:
-      # IMPORTANT: this permission is mandatory for trusted publishing
-      id-token: write
+    needs: release-build
 
     steps:
       - name: Retrieve release distributions
@@ -54,14 +50,10 @@ jobs:
           name: release-dists
           path: dist/
 
-      - name: Publish release distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist/
-          
-      - name: Publish to PyPI
+      - name: Publish to TestPyPI
         env:
-          TWINE_USERNAME: __token__  # OIDC uses the token as username
-          TWINE_PASSWORD: ${{ secrets.TESTPYPI_TWINE_SECRET }}
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: ${{ secrets.TESTPYPI_API_TOKEN }}
         run: |
-          twine upload --repository testpypi dist/* --verbose
+          python -m pip install twine
+          twine upload --repository testpypi dist/*
