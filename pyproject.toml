@@ -36,5 +36,5 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/Aragonski97/confluent-kafka-config"
-Changelog = "https://github.com/Aragonski97/confluent-kafka-yaml/releases"
-Issues = "https://github.com/Aragonski97/confluent-kafka-yaml/issues"
+Changelog = "https://github.com/Aragonski97/confluent-kafka-config/releases"
+Issues = "https://github.com/Aragonski97/confluent-kafka-config/issues"
