@@ -32,6 +32,9 @@ jobs:
     runs-on: ubuntu-24.04
     needs: release-build
     environment: testpypi
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Retrieve release distributions
@@ -52,6 +55,9 @@ jobs:
     runs-on: ubuntu-24.04
     needs: release-build
     environment: pypi
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Retrieve release distributions
