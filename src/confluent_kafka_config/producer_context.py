@@ -19,8 +19,8 @@ from confluent_kafka.serialization import SerializationContext, MessageField, St
 from confluent_kafka.schema_registry.avro import AvroSerializer
 from structlog import get_logger
 from pydantic import BaseModel
-from src.topic_context import TopicContext
-from src.registry_context import RegistryContext
+from confluent_kafka_config.topic_context import TopicContext
+from confluent_kafka_config.registry_context import RegistryContext
 
 
 class ProducerContext:
