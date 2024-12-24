@@ -7,7 +7,7 @@ confluent-kafka-config = "confluent_kafka_config.src.cfc:entry"
 
 [project]
 name = "confluent-kafka-config"
-version = "1.0.0"
+version = "1.0.1"
 description = "Load all your confluent-kafka clients from config file."
 readme = "README.md"
 authors = [{ name = "Lazar Jovanovic" }]
