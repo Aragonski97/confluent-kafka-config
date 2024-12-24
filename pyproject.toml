@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-confluent-kafka-config = "confluent-kafka-config.main:entry"
+confluent-kafka-config = "confluent_kafka_config.src.cfc:entry"
 
 [project]
 name = "confluent-kafka-config"

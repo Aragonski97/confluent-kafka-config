@@ -69,11 +69,3 @@ def entry():
         generate_template(config_path=args.path, config_type=args.type)
     else:
         print("No command provided. Use --generate-template [path] --type [type] to generate a config.")
-
-if __name__ == "__main__":
-    sys.argv = [
-        "confluent-kafka-config",
-        "--path", Path(__file__).parent.as_posix(),
-        "--type", 'JSON'
-    ]
-    entry()
