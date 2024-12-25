@@ -76,5 +76,3 @@ class ClientPool:
             producers=producers,
             consumers=consumers,
         )
-
-pool = ClientPool.from_config(config_path='/home/axiom/.fenrir-infrastructure/confluent-kafka-yaml/assets/config_example.yaml')
