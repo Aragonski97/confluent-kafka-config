@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "confluent-kafka-config"
-version = "1.0.14"
+version = "1.1.0"
 description = "Load all your confluent-kafka clients from config file."
 readme = "README.md"
 authors = [{ name = "Lazar Jovanovic", email = "l.jovanovic97@gmail.com" }]
@@ -15,7 +15,7 @@ license = { file = "LICENSE" }
 requires-python = ">=3.12"
 classifiers = [
     "License :: OSI Approved :: Apache Software License",
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3.12",
     "Framework :: Pydantic :: 2",
