@@ -41,8 +41,11 @@ producers < list of dictionaries >
        ├── acks:               < 0, 1, etc. >
        └── ...
 ```
-
 ## Docs:
+### Definitions:
+- Client: Either an instance of ProducerContext or ConsumerContext
+
+⚠️ **Warning:** At present, each client expects a single topic with single schema. This will be resolved in the future: https://github.com/Aragonski97/confluent-kafka-config/issues/16
 
 ### ClientPool
 A wrapper class that contains all consumers / producers instantiated based on config file.
@@ -61,8 +64,25 @@ pool = ClientPool.from_config(<path_to_your_config_file>)
 # get specific consumer by name is pool.consumers[<consumer name>]
 # same for producers
 # overriden __getitem__ will be implemented in the future: https://github.com/Aragonski97/confluent-kafka-config/issues/15
-
 ```
+### RegistryContext
+A wrapper around ```confluent_kafka.SchemaRegistryClient``` that includes the given schema indended for a client specified in config file.
+Based on the schema, a function ```confluent_kafka_config.RegistryContext.create_registered_model``` creates a model based on the schema definied in the registry.
+This model is used for deserialization and serialization.
+
+### TopicContext
+A wrapper around ```confluent_kafka.TopicPartition``` class that includes not only the topic name and partitions, but also a registered schema specified in the config file.
+
+### ConsumerContext
+A wrapper around ```confluent_kafka.Consumer``` class that includes a given ```confluent_kafka_config.TopicContext```.
+The function ```confluent_kafka_config.ConsumerContext.consume``` is an exposed version of ```confluent_kafka.Consumer.consume``` which handles some errors.
+This error handling will be extensively covered in the future: https://github.com/Aragonski97/confluent-kafka-config/issues/17
+
+### ProducerContext
+Almost identical to ConsumerContext, just pertaining ```confluent_kafka.Producer``` class.
+
+### KafkaConfig
+A pydantic schema used for loading the config file. Embedded validation, etc.
 
 
 
