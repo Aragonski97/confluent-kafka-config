@@ -48,7 +48,7 @@ class ClientPool:
                 "Please refer to confluent_kafka_yaml.src.config_example.yaml for an example configuration."
             )
         if kafka_config.admin:
-            admin = AdminClient(kafka_config.admin_config)
+            admin = AdminClient(kafka_config.admin.config)
         else:
             raise ValueError("Kafka admin section missing from config.")
         if kafka_config.schema_registry:
