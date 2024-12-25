@@ -1,4 +1,24 @@
-from confluent_kafka_config.consumer_context import ConsumerContext
+# Copyright 2024 Lazar Jovanovic (https://github.com/Aragonski97)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+from .consumer_context import ConsumerContext
+from .producer_context import ProducerContext
+from .registry_context import RegistryContext
+from .topic_context import TopicContext
+from .client_pool import ClientPool
+from .validation import KafkaConfig
 
 __all__ = [
     "ClientPool",

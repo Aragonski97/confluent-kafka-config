@@ -14,7 +14,6 @@
 
 import argparse
 import shutil
-import sys
 import os
 from pathlib import Path
 from typing import Literal
@@ -35,7 +34,7 @@ def generate_template(
     if not Path(config_path).is_dir():
         print(f"Directory does not exist. Creating {config_path}...")
         os.makedirs(config_path)
-    src_path = Path(__file__).parent.joinpath(f'config_example.{config_type.lower()}').as_posix()
+    src_path = Path(__file__).joinpath(f'config_example.{config_type.lower()}').as_posix()
     target_path = Path(config_path, f'config_example.{config_type.lower()}').as_posix()
     copy_file(src_path=src_path, dest_path=target_path)
     print(f"Template copied to {target_path}")

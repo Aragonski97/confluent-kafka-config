@@ -1,2 +1,1 @@
-include confluent_kafka_config/src/confluent_kafka_config/*
-include confluent_kafka_config/src/assets/*
+include README.md
