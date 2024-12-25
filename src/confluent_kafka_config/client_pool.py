@@ -47,24 +47,24 @@ class ClientPool:
                 "Configuration not correctly written or the config is not properly loaded."
                 "Please refer to confluent_kafka_yaml.src.config_example.yaml for an example configuration."
             )
-        if kafka_config.kafka.admin:
-            admin = AdminClient(kafka_config.kafka.admin.kafka_config)
+        if kafka_config.admin:
+            admin = AdminClient(kafka_config.admin_config)
         else:
             raise ValueError("Kafka admin section missing from config.")
-        if kafka_config.kafka.schema_registry:
-            schema_registry = SchemaRegistryClient(kafka_config.kafka.schema_registry.model_dump())
+        if kafka_config.schema_registry:
+            schema_registry = SchemaRegistryClient(kafka_config.schema_registry.model_dump())
         else:
             raise ValueError("Kafka schema registry section missing from config.")
         consumers: dict[str, ConsumerContext] = dict()
         producers: dict[str, ProducerContext] = dict()
-        if kafka_config.kafka.consumers:
-            for consumer_config in kafka_config.kafka.consumers:
+        if kafka_config.consumers:
+            for consumer_config in kafka_config.consumers:
                 consumer = ConsumerContext(**consumer_config.model_dump())
                 consumer.configure(registry_client=schema_registry)
                 assert consumers.get(consumer.name) is None
                 consumers[consumer.name] = consumer
-        if kafka_config.kafka.producers:
-            for producer_config in kafka_config.kafka.producers:
+        if kafka_config.producers:
+            for producer_config in kafka_config.producers:
                 producer = ProducerContext(**producer_config.model_dump())
                 producer.configure(registry_client=schema_registry)
                 assert producers.get(producer.name) is None
