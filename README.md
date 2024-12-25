@@ -2,6 +2,15 @@
 
 A thin wrapper around the [confluent-kafka-python](https://github.com/confluentinc/confluent-kafka-python) library. This wrapper allows for dynamic instantiation of Consumer, Producer, and Admin clients based on configurations provided in a config file in YAML or JSON formats.
 
+
+## Installation
+
+To install this package, run:
+
+```bash
+pip install confluent_kafka_config
+```
+
 ## Structure of config file
 ```
 admin
@@ -53,14 +62,6 @@ pool = ClientPool.from_config(<path_to_your_config_file>)
 # same for producers
 # overriden __getitem__ will be implemented in the future: https://github.com/Aragonski97/confluent-kafka-config/issues/15
 
-```
-
-## Installation
-
-To install this package, run:
-
-```bash
-pip install confluent_kafka_config
 ```
 
 
