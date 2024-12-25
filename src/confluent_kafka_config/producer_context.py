@@ -120,12 +120,12 @@ class ProducerContext:
             return
         try:
             if self.topic.registry_context:
-                key = self.topic.key_serialization_method(key, SerializationContext(self.topic.name, MessageField.KEY)),
+                key = self.topic.key_serialization_method(key, SerializationContext(self.topic.name, MessageField.KEY))
                 value = self.topic.value_serialization_method(
                     value, SerializationContext(self.topic.name, MessageField.VALUE)
                 )
             else:
-                key = self.topic.key_serialization_method(key, SerializationContext(self.topic.name, MessageField.KEY)),
+                key = self.topic.key_serialization_method(key, SerializationContext(self.topic.name, MessageField.KEY))
                 value = value.model_dump_json(indent=True, exclude_none=True)
             # will override internal partitioner logic
             if self.topic.partitions:

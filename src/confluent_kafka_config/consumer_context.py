@@ -166,7 +166,7 @@ class ConsumerContext:
                     fallback="Skipping..."
                 )
                 return None, None
-            if self.topic.registry_context.registry_client:
+            if self.topic.registry_context:
                 key = self.topic.key_serialization_method(
                     msg.key(),
                     SerializationContext(msg.topic(), MessageField.KEY)
