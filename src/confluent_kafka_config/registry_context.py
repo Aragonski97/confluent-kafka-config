@@ -80,6 +80,8 @@ class RegistryContext:
                     fields[field] = ( float | None, ... )
                 elif f_type == "datetime":
                     fields[field] = ( datetime.datetime | None, ... )
+                elif f_type == "double":
+                    fields[field] = ( float | None, ... )
 
             self.registered_model = create_model(
                 f"TopicModel_{name}",

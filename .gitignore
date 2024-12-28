@@ -1,4 +1,5 @@
 .venv/
+assets/from_book.yaml
 .idea/
 # Byte-compiled / optimized / DLL files
 __pycache__/
