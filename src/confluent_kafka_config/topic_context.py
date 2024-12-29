@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2024 Lazar Jovanovic (https://github.com/Aragonski97)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from structlog import get_logger
 from confluent_kafka import TopicPartition
 from confluent_kafka.admin import AdminClient
-from structlog import get_logger
-from confluent_kafka_config.registry_context import RegistryContext
+from typing import Callable
+from pathlib import Path
+from registry_context import RegistryContext
+from utils import create_model_from_avro, import_pydantic_schema
+import re
 
 
 class TopicContext:
@@ -24,20 +29,31 @@ class TopicContext:
             self,
             name: str,
             registry_context: RegistryContext | None = None,
-            partitions: list[int] | None = None,
+            # def partitioner(key: str) -> int --> Callable[[str], int]
+            partitions: list[int] | Callable[[str], int] | None = None,
+            pydantic_schema_location: str | Path | None = None
     ):
         self.name = name
         self.partitions = partitions
 
         self.registry_context = registry_context
         self._logger = get_logger()
-        self.pydantic_schema = None
+        self.pydantic_schema_location = pydantic_schema_location
+        self.pydantic_model = None
         self.partitions = list()
+        self.key_serialization_method = None
+        self.value_serialization_method = None
 
-        if registry_context:
-            self.key_serialization_method = None
-            self.value_serialization_method = None
-            self.registry_context.create_registered_model(name=self.name)
+
+    def build_from_avro(self):
+        if self.registry_context:
+            if not self.pydantic_schema_location:
+                self.pydantic_model = create_model_from_avro(schema=self.registry_context.schema_dict)
+            else:
+                formatted_name = re.sub(r"", "", self.pydantic_schema_location)
+                import_pydantic_schema(
+                    name=self.registry_context.schema_name
+                )
         else:
             self._logger.warning(f"No supplied schema")
 
@@ -49,3 +65,4 @@ class TopicContext:
 
     def get_topic_partitions(self):
         return [TopicPartition(topic=self.name, partition=partition) for partition in self.partitions]
+

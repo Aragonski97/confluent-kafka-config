@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2024 Lazar Jovanovic (https://github.com/Aragonski97)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,19 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
 import json
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from structlog import get_logger
-from pydantic import BaseModel, create_model
-
+from pathlib import Path
 
 class RegistryContext:
 
     def __init__(
             self,
             registry_client: SchemaRegistryClient,
-            schema_name: str
+            schema_name: str,
+            pydantic_model_path: str | Path | None = None
     ) -> None:
         """
         A wrapper around confluent_kafka.schema_registry.SchemaRegistryClient.
@@ -39,6 +39,7 @@ class RegistryContext:
 
         self.registry_client = registry_client
         self.schema_name = schema_name
+        self.pydantic_model = None
         self.logger = get_logger()
 
         self.schema_latest_version = None
@@ -47,7 +48,6 @@ class RegistryContext:
         self.schema_type = None
         self.parsed_schema = None
         self.registered_model = None
-
         if not self.schema_name:
             self.logger.warning(event="Schema missing!")
         else:
@@ -59,34 +59,3 @@ class RegistryContext:
         self.schema_dict = json.loads(self.schema_latest_version.schema.schema_str)
         self.schema_type = self.schema_latest_version.schema.schema_type
 
-    def create_registered_model(self, name):
-        if self.schema_type == "AVRO":
-            fields = {item["name"]: item["type"] for item in self.schema_dict.get("fields")}
-            # assumes only nullable single types
-            # will have to change if there are multiple types of fields
-            for field, f_type in fields.items():
-                if isinstance(f_type, list):
-                    fields[field] = f_type[0] if f_type[0] != "null" else f_type[1]
-                    continue
-                # datetime formats
-                elif isinstance(f_type, dict):
-                    fields[field] = 'datetime'
-                    continue
-
-            for field, f_type in fields.items():
-                if f_type == "string":
-                    fields[field] = ( str | None, ... )
-                elif f_type == "float":
-                    fields[field] = ( float | None, ... )
-                elif f_type == "datetime":
-                    fields[field] = ( datetime.datetime | None, ... )
-                elif f_type == "double":
-                    fields[field] = ( float | None, ... )
-
-            self.registered_model = create_model(
-                f"TopicModel_{name}",
-                __base__=BaseModel,
-                **fields
-            )
-        else:
-            raise

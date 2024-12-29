@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2024 Lazar Jovanovic (https://github.com/Aragonski97)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +20,8 @@ from confluent_kafka.serialization import SerializationContext, MessageField, St
 from confluent_kafka.schema_registry.avro import AvroSerializer
 from structlog import get_logger
 from pydantic import BaseModel
-from confluent_kafka_config.topic_context import TopicContext
-from confluent_kafka_config.registry_context import RegistryContext
+from topic_context import TopicContext
+from registry_context import RegistryContext
 
 
 class ProducerContext:
