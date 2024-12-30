@@ -15,8 +15,8 @@
 
 from confluent_kafka import Consumer, TopicPartition, Message, KafkaException
 from confluent_kafka.serialization import SerializationContext, MessageField
-from topic_context import ConsumerTopic
-from validation import ClientConfig
+from .topic_context import ConsumerTopic
+from .validation import ClientConfig
 
 
 class ConsumerContext:

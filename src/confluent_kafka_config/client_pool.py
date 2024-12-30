@@ -15,9 +15,9 @@
 
 from pathlib import Path
 from confluent_kafka.admin import AdminClient
-from consumer_context import ConsumerContext
-from producer_context import ProducerContext
-from validation import KafkaConfig, ClientConfig
+from .consumer_context import ConsumerContext
+from .producer_context import ProducerContext
+from .validation import KafkaConfig, ClientConfig
 
 
 class ClientPool:

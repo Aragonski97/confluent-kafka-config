@@ -18,7 +18,7 @@ import shutil
 from pathlib import Path
 from typing import Literal
 from ast import literal_eval
-from utils import create_pydantic_schema
+from .utils import create_pydantic_schema
 
 def generate_template(
         config_location: Path | str,
