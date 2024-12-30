@@ -15,8 +15,8 @@
 
 import json
 from confluent_kafka.schema_registry import SchemaRegistryClient
-from utils import create_model_from_avro, import_pydantic_schema, create_pydantic_schema
-from validation import SchemaRegistryConfig
+from .utils import create_model_from_avro, import_pydantic_schema, create_pydantic_schema
+from .validation import SchemaRegistryConfig
 
 class RegistryContext:
 

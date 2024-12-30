@@ -13,12 +13,12 @@
 # limitations under the License.
 
 
-from consumer_context import ConsumerContext
-from producer_context import ProducerContext
-from registry_context import RegistryContext
-from topic_context import TopicContext
-from client_pool import ClientPool
-from validation import KafkaConfig
+from .consumer_context import ConsumerContext
+from .producer_context import ProducerContext
+from .registry_context import RegistryContext
+from .topic_context import TopicContext
+from .client_pool import ClientPool
+from .validation import KafkaConfig
 
 __all__ = [
     "ClientPool",

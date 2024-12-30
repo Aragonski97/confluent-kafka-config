@@ -18,8 +18,8 @@ import fastavro
 from confluent_kafka import TopicPartition
 from confluent_kafka.serialization import StringDeserializer, StringSerializer
 from confluent_kafka.schema_registry.avro import AvroDeserializer, AvroSerializer
-from registry_context import RegistryContext
-from validation import TopicConfig
+from .registry_context import RegistryContext
+from .validation import TopicConfig
 
 
 class TopicContext:

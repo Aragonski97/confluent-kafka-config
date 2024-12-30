@@ -16,8 +16,8 @@
 from confluent_kafka import Producer, Message, KafkaError
 from confluent_kafka.serialization import SerializationContext, MessageField
 from pydantic import BaseModel
-from validation import ClientConfig
-from topic_context import ProducerTopic
+from .validation import ClientConfig
+from .topic_context import ProducerTopic
 
 
 class ProducerContext:
