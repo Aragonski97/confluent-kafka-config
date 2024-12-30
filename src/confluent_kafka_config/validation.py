@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2024 Lazar Jovanovic (https://github.com/Aragonski97)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,48 +13,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import yaml
 import json
 from io import TextIOWrapper
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings
 from pathlib import Path
+from traceback import format_exc
 
 
 class AdminConfig(BaseModel):
     config: dict
 
 class SchemaRegistryConfig(BaseModel):
-    url: str
+    config: dict
+    schema_name: str | None = Field(default=None)
+    # TODO: add support for s3, hdfs, ceph, etc.
+    pydantic_schema_location: str | None = Field(default=None)
+    pydantic_schema_classname: str | None = Field(default=None)
 
 class TopicConfig(BaseModel):
     name: str
     partitions: list[int] | None = Field(default=None)
-    schema_name: str | None = Field(default=None)
+    registry_config: SchemaRegistryConfig | None = Field(default=None)
 
 class ClientConfig(BaseModel):
-    name: str
-    topic: TopicConfig | None = Field(default=None)
+    # any string that you will call in order to get the client using __getattr__ in pool
+    # enforces a single word
+    name: str = Field(pattern="^[a-z]+$")
+    topics: list[TopicConfig] | None = Field(default=None)
     config: dict
 
 class KafkaConfig(BaseSettings):
+    assets_path: str | Path | None = Field(default=None)
     admin: AdminConfig
-    schema_registry: SchemaRegistryConfig
     consumers: list[ClientConfig] | None = Field(default=None)
     producers: list[ClientConfig] | None = Field(default=None)
-
-    class Config:
-        case_sensitive = False
-        # docker container path
-        secrets_dir = '/run/secrets'
 
     @classmethod
     def from_yaml(
             cls,
-            path: Path | str | None = None,
-            file_io: TextIOWrapper | None = None
-    ):
+            file_io: TextIOWrapper | None = None,
+            path: Path | str | None = None
+    ) -> 'KafkaConfig':
         try:
             if file_io is not None:
                 data = yaml.safe_load(file_io)
@@ -62,16 +64,19 @@ class KafkaConfig(BaseSettings):
                 raise ValueError("Neither path nor file is specified.")
             with open(path, 'r') as f:
                 data = yaml.safe_load(f)
+            print(f"Data loaded successfully")
             return cls(**data)
         except (yaml.YAMLError, FileNotFoundError) as err:
-            ...
+            print(f"Could not yaml file from {path}, traceback: {format_exc()}")
+            raise err
+
 
     @classmethod
     def from_json(
             cls,
-            path: Path | str | None = None,
-            file_io: TextIOWrapper | None = None
-    ):
+            file_io: TextIOWrapper | None = None,
+            path: Path | str | None = None
+    ) -> 'KafkaConfig':
         try:
             if file_io is not None:
                 data = json.load(file_io)
@@ -80,9 +85,11 @@ class KafkaConfig(BaseSettings):
                 raise ValueError("Neither path nor file is specified.")
             with open(path, 'r') as f:
                 data = json.load(f)
+            print(f"Data loaded successfully")
+
             return cls(**data)
         except (json.JSONDecodeError, FileNotFoundError) as err:
-            ...
+            raise err(f"Could not json file from {path}, traceback: {format_exc()}")
 
     @classmethod
     def load_config(
@@ -92,10 +99,12 @@ class KafkaConfig(BaseSettings):
         if config_path is None:
             raise FileNotFoundError("Neither path nor file is specified.")
         if config_path.endswith('.json'):
-            cb = KafkaConfig.from_json
-        elif config_path.endswith('.yaml'):
-            cb = KafkaConfig.from_yaml
+            print(f"Found kafka config file at:{config_path} --> JSON config file.")
+            with open(config_path, 'r') as f:
+                return KafkaConfig.from_json(file_io=f, path=config_path)
+        elif config_path.endswith('.yaml') or config_path.endswith('.yml'):
+            print(f"Found kafka config file at: {config_path} --> YAML config file.")
+            with open(config_path, 'r') as f:
+                return KafkaConfig.from_yaml(file_io=f, path=config_path)
         else:
-            raise TypeError('config_path must be of type "json" or "yaml".')
-        with open(config_path, 'r') as f:
-            return cb(file_io=f, path=config_path)
+            raise TypeError('config_path must be of type "json" or ["yaml", "yml"].')

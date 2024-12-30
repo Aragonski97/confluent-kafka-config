@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2024 Lazar Jovanovic (https://github.com/Aragonski97)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,19 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
 import json
 from confluent_kafka.schema_registry import SchemaRegistryClient
-from structlog import get_logger
-from pydantic import BaseModel, create_model
-
+from utils import create_model_from_avro, import_pydantic_schema, create_pydantic_schema
+from validation import SchemaRegistryConfig
 
 class RegistryContext:
 
     def __init__(
             self,
             registry_client: SchemaRegistryClient,
-            schema_name: str
+            schema_name: str | None = None,
+            pydantic_schema_location: str | None = None,
+            pydantic_schema_classname: str | None = None
     ) -> None:
         """
         A wrapper around confluent_kafka.schema_registry.SchemaRegistryClient.
@@ -39,8 +40,8 @@ class RegistryContext:
 
         self.registry_client = registry_client
         self.schema_name = schema_name
-        self.logger = get_logger()
-
+        self.pydantic_schema_location = pydantic_schema_location
+        self.pydantic_schema_classname = pydantic_schema_classname
         self.schema_latest_version = None
         self.schema_id = None
         self.schema_dict = None
@@ -48,10 +49,53 @@ class RegistryContext:
         self.parsed_schema = None
         self.registered_model = None
 
-        if not self.schema_name:
-            self.logger.warning(event="Schema missing!")
+    @classmethod
+    def build_context(
+            cls,
+            registry_config: SchemaRegistryConfig
+    ) -> 'RegistryContext':
+        registry_client = SchemaRegistryClient(registry_config.config)
+        return cls(
+            registry_client=registry_client,
+            schema_name=registry_config.schema_name,
+            pydantic_schema_location=registry_config.pydantic_schema_location,
+            pydantic_schema_classname=registry_config.pydantic_schema_classname
+        )
+
+    def build_from_avro(self):
+        if self.pydantic_schema_location and self.pydantic_schema_classname and self.schema_name:
+            # will save it by this classname and in this location
+            pydantic_model = create_pydantic_schema(
+                schema_name=self.schema_name,
+                schema_dir_path=self.pydantic_schema_location,
+                schema_classname=self.pydantic_schema_classname,
+                schema_client=self.registry_client
+            )
+        elif (not self.pydantic_schema_classname or not self.pydantic_schema_location) and self.schema_name:
+            # TODO:
+            #  at the moment, it doesn't save it automatically so that the users can decide whether they want
+            #  to save the model or not, I should implement this soon:
+            pydantic_model = create_model_from_avro(schema=self.schema_dict)
+            # save
+        elif self.pydantic_schema_location and self.pydantic_schema_classname and not self.schema_name:
+            pydantic_model = import_pydantic_schema(
+                name=self.pydantic_schema_classname,
+                path=self.pydantic_schema_location
+            )
+            self.schema_name = pydantic_model.__name__
         else:
-            self.resolve_schema()
+            err_msg = """Invalid schema.
+            schema_name: {self.schema_name},
+            pydantic_schema_location: {self.pydantic_schema_location},
+            pydantic_schema_classname: {self.pydantic_schema_classname}
+            
+            Required:
+            1) All three --> saves model at location, by name, and returns it
+            2) (not pydantic_schema_location or not pydantic_schema_classname) and schema_name --> returns model
+            3) pydantic_schema_location and pydantic_schema_classname and not schema_name --> imports from location by name
+            """
+            raise SyntaxError(err_msg)
+        return pydantic_model
 
     def resolve_schema(self):
         self.schema_latest_version = self.registry_client.get_latest_version(self.schema_name)
@@ -59,34 +103,3 @@ class RegistryContext:
         self.schema_dict = json.loads(self.schema_latest_version.schema.schema_str)
         self.schema_type = self.schema_latest_version.schema.schema_type
 
-    def create_registered_model(self, name):
-        if self.schema_type == "AVRO":
-            fields = {item["name"]: item["type"] for item in self.schema_dict.get("fields")}
-            # assumes only nullable single types
-            # will have to change if there are multiple types of fields
-            for field, f_type in fields.items():
-                if isinstance(f_type, list):
-                    fields[field] = f_type[0] if f_type[0] != "null" else f_type[1]
-                    continue
-                # datetime formats
-                elif isinstance(f_type, dict):
-                    fields[field] = 'datetime'
-                    continue
-
-            for field, f_type in fields.items():
-                if f_type == "string":
-                    fields[field] = ( str | None, ... )
-                elif f_type == "float":
-                    fields[field] = ( float | None, ... )
-                elif f_type == "datetime":
-                    fields[field] = ( datetime.datetime | None, ... )
-                elif f_type == "double":
-                    fields[field] = ( float | None, ... )
-
-            self.registered_model = create_model(
-                f"TopicModel_{name}",
-                __base__=BaseModel,
-                **fields
-            )
-        else:
-            raise

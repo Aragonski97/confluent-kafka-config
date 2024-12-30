@@ -1,0 +1,65 @@
+#assets_path: ~/project/dir/path
+assets_path: /home/axiom/.fenrir/confluent-kafka-config/assets
+
+admin:
+  config:
+    bootstrap.servers: localhost:9092
+
+consumers:
+  - name: cns1
+    topics:
+      - name: cns.topic.1
+        registry_config:
+          config:
+            url: http://localhost:8081
+          schema_name: cns.schema.1
+          pydantic_schema_location: aa
+          pydantic_schema_classname: aaaa
+    config:
+      bootstrap.servers: localhost:9092
+      group.id: cns.group.1
+      auto.offset.reset: earliest
+      connections.max.idle.ms: 180000
+
+  - name: cns2
+    topic:
+      name: cns.topic.2
+      partitioner:
+        partitions:
+          - 3
+          - 6
+      schema_name: cns.schema.2
+      pydantic_schema_location:
+    config:
+      bootstrap.servers: localhost:9092
+      group.id: cns.group.2
+      auto.offset.reset: earliest
+      connections.max.idle.ms: 180000
+
+producers:
+  - name: prod1
+    topic:
+      name: prod.topic.1
+      partitioner:
+        partitions:
+          - 2
+          - 6
+      schema_name: prod.schema.1
+      pydantic_schema_location:
+    config:
+      bootstrap.servers: hostname:9092
+      client.id: 'prod.cli.1'
+      acks: all
+      linger.ms: 1000
+      batch.size: 1000
+  - name: prod2
+    topic:
+      name: prod.topic.2
+      schema_name: prod.schema.2
+      pydantic_schema_location:
+    config:
+      bootstrap.servers: hostname:9092
+      client.id: 'prod.cli.2'
+      acks: all
+      linger.ms: 1000
+      batch.size: 1000

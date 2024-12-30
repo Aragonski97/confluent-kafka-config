@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2024 Lazar Jovanovic (https://github.com/Aragonski97)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import fastavro
 from confluent_kafka import Producer, Message, KafkaError
-from confluent_kafka.schema_registry import SchemaRegistryClient
-from confluent_kafka.serialization import SerializationContext, MessageField, StringSerializer
-from confluent_kafka.schema_registry.avro import AvroSerializer
-from structlog import get_logger
+from confluent_kafka.serialization import SerializationContext, MessageField
 from pydantic import BaseModel
-from confluent_kafka_config.topic_context import TopicContext
-from confluent_kafka_config.registry_context import RegistryContext
+from validation import ClientConfig
+from topic_context import ProducerTopic
 
 
 class ProducerContext:
@@ -28,85 +25,29 @@ class ProducerContext:
     def __init__(
             self,
             name: str,
-            topic: dict,
-            config: dict,
+            topics: dict[str, ProducerTopic],
+            config: dict
     ) -> None:
 
-        self._logger = get_logger()
         self.name = name
-        self.topic: TopicContext | None = None
-        self._topic_config = topic
-        self._config = config
-        self._producer = Producer(self._config)
+        self.topics = topics
+        self.config = config
+        self.consumer: Producer | None = None
 
-    def configure(
-            self,
-            registry_client: SchemaRegistryClient | None = None
-    ):
-        self._resolve_topic(registry_client)
-        """
-        TODO: Check if the count of partitions matches available partitions
-        """
-
-    def _resolve_topic(
-            self,
-            registry_client: SchemaRegistryClient | None = None
-    ):
-        if registry_client:
-            registry_context = RegistryContext(
-                registry_client=registry_client,
-                schema_name=self._topic_config["schema_name"]
-            )
-            self.topic = TopicContext(
-                name=self._topic_config["name"],
-                partitions=self._topic_config["partitions"],
-                registry_context = registry_context
-            )
-            self._configure_serialization()
-            return
-        self.topic = TopicContext(
-            name=self._topic_config["name"],
-            partitions=self._topic_config["partitions"]
+    @classmethod
+    def build_context(
+            cls,
+            client_config: ClientConfig,
+    ) -> 'ProducerContext':
+        _topics = dict()
+        for _topic in client_config.topics:
+            __topic = ProducerTopic.build_context(_topic)
+            _topics[client_config.name] = __topic
+        return cls(
+            name=client_config.name,
+            topics=_topics,
+            config=client_config.config
         )
-        return
-
-    def _configure_json_serialization(self) -> None:
-        """
-        Not yet implemented
-        """
-        self._logger.error("Json schema not implemented yet!")
-        raise TypeError("Json schema not implemented yet!")
-
-    def _configure_avro_serialization(self) -> None:
-        self.topic.registry_context.parsed_schema = fastavro.parse_schema(self.topic.registry_context.schema_dict)
-        self.topic.value_serialization_method = AvroSerializer(
-            schema_registry_client=self.topic.registry_context.registry_client,
-            schema_str=self.topic.registry_context.schema_latest_version.schema.schema_str,
-            to_dict=lambda obj, ctx: self.topic.registry_context.registered_model.model_dump(obj, context=ctx)
-        )
-        self.topic.key_serialization_method = StringSerializer('utf_8')
-        self._logger.info(f"Avro serialization set for {self.name}")
-
-    def _configure_protobuf_serialization(self) -> None:
-        """
-        Not yet implemented
-        """
-        self._logger.error("Protobuf schema not implemented yet!")
-        raise TypeError("Protobuf schema not implemented yet!")
-
-    def _configure_serialization(self) -> None:
-        if not self.topic.registry_context:
-            return
-        match self.topic.registry_context.schema_type:
-            case "JSON":
-                self._configure_json_serialization()
-            case "AVRO":
-                self._configure_avro_serialization()
-            case "PROTOBUF":
-                self._configure_protobuf_serialization()
-            case _:
-                self._logger.error(f"Schema of type {self.topic.registry_context.schema_type} not recognized")
-                raise ValueError(f"Schema of type {self.topic.registry_context.schema_type} not recognized")
 
     def produce(
             self,
@@ -128,8 +69,8 @@ class ProducerContext:
                 key = self.topic.key_serialization_method(key, SerializationContext(self.topic.name, MessageField.KEY))
                 value = value.model_dump_json(indent=True, exclude_none=True)
             # will override internal partitioner logic
-            if self.topic.partitions:
-                for partition in self.topic.partitions:
+            if self.topic.partitioner:
+                for partition in self.topic.partitioner:
                     self._producer.produce(
                         topic=self.topic.name,
                         partition=partition,
@@ -154,7 +95,7 @@ class ProducerContext:
             self._logger.info("Delivery failed for User record {}: {}".format(msg.key(), err))
             return
         self._logger.info('User record {} successfully produced to {} [{}] at offset {}'.format(
-            msg.key(), msg.topic(), msg.partition(), msg.offset()))
+            msg.key(), msg.topics(), msg.partition(), msg.offset()))
 
 
 

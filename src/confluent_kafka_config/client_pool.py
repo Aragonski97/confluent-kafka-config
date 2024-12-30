@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2024 Lazar Jovanovic (https://github.com/Aragonski97)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from pathlib import Path
 from confluent_kafka.admin import AdminClient
-from confluent_kafka.schema_registry import SchemaRegistryClient
-from confluent_kafka_config.consumer_context import ConsumerContext
-from confluent_kafka_config.producer_context import ProducerContext
-from confluent_kafka_config.validation import KafkaConfig
+from consumer_context import ConsumerContext
+from producer_context import ProducerContext
+from validation import KafkaConfig, ClientConfig
 
 
 class ClientPool:
@@ -26,21 +25,21 @@ class ClientPool:
     def __init__(
             self,
             admin: AdminClient | None = None,
-            schema_registry: SchemaRegistryClient | None = None,
             producers: dict[str, ProducerContext] | None = None,
-            consumers: dict[str, ConsumerContext] | None = None
+            consumers: dict[str, ConsumerContext] | None = None,
+            assets_path: str | None = None
     ) -> None:
         self.admin = admin
-        self.schema_registry = schema_registry
         self.producers = producers
         self.consumers = consumers
+        self.assets_path = assets_path
 
 
     @classmethod
     def from_config(
             cls,
             config_path: Path | str | None
-    ):
+    ) -> 'ClientPool':
         kafka_config = KafkaConfig.load_config(config_path)
         if not kafka_config:
             raise SyntaxError(
@@ -51,28 +50,24 @@ class ClientPool:
             admin = AdminClient(kafka_config.admin.config)
         else:
             raise ValueError("Kafka admin section missing from config.")
-        if kafka_config.schema_registry:
-            schema_registry = SchemaRegistryClient(kafka_config.schema_registry.model_dump())
-        else:
-            raise ValueError("Kafka schema registry section missing from config.")
         consumers: dict[str, ConsumerContext] = dict()
         producers: dict[str, ProducerContext] = dict()
         if kafka_config.consumers:
             for consumer_config in kafka_config.consumers:
-                consumer = ConsumerContext(**consumer_config.model_dump())
-                consumer.configure(registry_client=schema_registry)
-                assert consumers.get(consumer.name) is None
+                consumer_config: ClientConfig
+                consumer = ConsumerContext.build_context(consumer_config)
+                consumer.subscribe()
                 consumers[consumer.name] = consumer
         if kafka_config.producers:
             for producer_config in kafka_config.producers:
-                producer = ProducerContext(**producer_config.model_dump())
-                producer.configure(registry_client=schema_registry)
-                assert producers.get(producer.name) is None
+                producer_config: ClientConfig
+                producer = ProducerContext.build_context(producer_config)
+
                 producers[producer.name] = producer
 
         return cls(
+            assets_path=kafka_config.assets_path,
             admin=admin,
-            schema_registry=schema_registry,
             producers=producers,
             consumers=consumers,
         )
