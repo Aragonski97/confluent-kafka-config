@@ -15,47 +15,53 @@
 
 from pathlib import Path
 
+import json
 import pydantic_core
 from confluent_kafka import KafkaException
 from pydantic import BaseModel, create_model
 from dataclasses_avroschema.pydantic import AvroBaseModel
 from datetime import datetime
 from enum import Enum
-from typing import Union, Type, Callable
+from typing import Union, Type
 from importlib.util import spec_from_file_location
 from confluent_kafka.schema_registry import SchemaRegistryClient
-import json
 
 ROOT_DIR = Path(__file__).parent.resolve()
 
 
 def create_pydantic_schema(
         schema_name: str,
-        schemas_dir_path: str | Path,
+        schema_dir_path: str | Path,
+        schema_classname: str,
         schema_config: dict | None = None,
+        schema_client: SchemaRegistryClient = None,
         content: str | None = None
-) -> None:
-    assert schema_config or content
-    if not schemas_dir_path.endswith("/"):
-        schemas_dir_path = schemas_dir_path + "/"
+) -> Type[BaseModel]:
+
+    assert schema_config or content or schema_client
+    if not schema_dir_path.endswith("/"):
+        schema_dir_path = schema_dir_path + "/"
     # if schema_registry_url is provided, it will override content arg
-    if schema_config:
+    if schema_client:
+        pass
+    elif schema_config:
         try:
-            registry_client = SchemaRegistryClient(schema_config)
+            schema_client = SchemaRegistryClient(schema_config)
         except KafkaException as err:
             raise err
-        else:
-            schema_latest_version = registry_client.get_latest_version(schema_name)
-            content = json.loads(schema_latest_version.schema.schema_str)
-            model = create_model_from_avro(content)
-            model_code = _generate_module_code(model)
-            with open(
-                    f"{schemas_dir_path}{model.__name__}.py", "w"
-            ) as f:
-                f.write(model_code)
-            return
     else:
-        ...
+        pass
+    schema_latest_version = schema_client.get_latest_version(schema_name)
+    content = json.loads(schema_latest_version.schema.schema_str)
+    model = create_model_from_avro(content)
+    py_module = Path(schema_dir_path+schema_classname+'.py')
+    if not py_module.exists():
+        model_code = _generate_module_code(model)
+        with open(py_module, "w") as f:
+            f.write(model_code)
+    return model
+
+
 def import_pydantic_schema(
         name: str,
         path: str | Path | None
@@ -173,7 +179,7 @@ def parse_avro_record_schema(schema: dict) -> dict:
     return formatted_fields
 
 
-def create_model_name(schema: dict, prefix: str | None = None) -> str:
+def create_model_name(schema: dict) -> str:
     """
     Best naming conventions:
     https://stackoverflow.com/a/47291235
@@ -206,22 +212,22 @@ def create_model_name(schema: dict, prefix: str | None = None) -> str:
     _type = _type.replace('-', '_')
     _type = _type.replace('.', '_')
     _processed_name += _type
-    if prefix:
-        _processed_name = prefix + '_' + _processed_name + '_schema'
     return _processed_name.lower()
 
-def create_model_from_avro(schema: dict) -> Type[BaseModel] | Callable:
+def create_model_from_avro(schema: dict, schema_name: str | None = None) -> Type[AvroBaseModel]:
     """
     Dynamically Creates a model based on schema as per pydantic.create_model function.
     Parses types and makes an adequate format for this function to be called.
-    :param schema: Python dictionary containing full Apache AVRO schema.
-    :return: A Pydantic model class callable. Not an instance!
     """
     _parsed_schema: dict | None = None
     if schema.get('type') == 'record':
         _parsed_schema = parse_avro_record_schema(schema=schema)
     # cfc stands for confluent-kafka-config
-    _model_name: str = create_model_name(schema=schema, prefix='cfc')
+    if not schema_name:
+        # default
+        _model_name: str = create_model_name(schema=schema)
+    else:
+        _model_name = schema_name
     # TODO: Submit ticket to Pydantic repo to reconfigure create_model signature in such a way that
     #  allows for model_name to be used as a key-value combination when calling the function.
     #  As of now, I can't state model_name=_model_name due to * in signature.

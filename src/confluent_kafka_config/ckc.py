@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-
 import argparse
 import shutil
 from pathlib import Path
@@ -110,7 +108,7 @@ def entry():
         try:
             create_pydantic_schema(
                 schema_name=args.schema_name,
-                schemas_dir_path=args.output,
+                schema_dir_path=args.output,
                 schema_config=literal_eval(args.registry_config)
             )
         except Exception as err:

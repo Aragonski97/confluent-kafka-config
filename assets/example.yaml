@@ -1,20 +1,20 @@
+#assets_path: ~/project/dir/path
+assets_path: /home/axiom/.fenrir/confluent-kafka-config/assets
+
 admin:
   config:
     bootstrap.servers: localhost:9092
 
-schema_registry:
-  config:
-    url: http://localhost:8081
-
 consumers:
   - name: cns1
-    topic:
-      name: cns.topic.1
-      partitioner:
-        partitions:
-        custom_partitioner:
-      schema_name: cns.schema.1
-      pydantic_schema_location:
+    topics:
+      - name: cns.topic.1
+        registry_config:
+          config:
+            url: http://localhost:8081
+          schema_name: cns.schema.1
+          pydantic_schema_location: aa
+          pydantic_schema_classname: aaaa
     config:
       bootstrap.servers: localhost:9092
       group.id: cns.group.1
